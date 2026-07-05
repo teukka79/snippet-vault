@@ -22,6 +22,8 @@
     --accent:#e8a33d;
     --accent-bright:#ffcb66;
     --danger:#c0654f;
+    --good:#7fc98f;
+    --ok:#c9c25f;
     --type-command:#e8a33d;
     --type-username:#6fb3c9;
     --type-password:#c98fe0;
@@ -52,13 +54,21 @@
     box-shadow:0 0 8px var(--accent);display:inline-block;
   }
 
-  .search{display:flex;gap:8px;margin-bottom:16px;}
+  .search{display:flex;gap:8px;margin-bottom:10px;}
   .search input{
     flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);
     border-radius:10px;padding:11px 13px;font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;
   }
   .search input::placeholder{color:var(--text-dim);}
   .search input:focus{border-color:var(--accent);}
+
+  .catchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;scrollbar-width:none;}
+  .catchips::-webkit-scrollbar{display:none;}
+  .catchip{
+    flex-shrink:0;padding:7px 13px;border-radius:999px;border:1px solid var(--border);background:var(--surface);
+    color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;
+  }
+  .catchip.active{border-color:var(--accent);color:var(--accent-bright);background:rgba(232,163,61,.12);}
 
   .empty{text-align:center;color:var(--text-dim);padding:60px 20px;font-size:14px;line-height:1.6;}
   .empty b{color:var(--text);}
@@ -67,23 +77,36 @@
     background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
     padding:14px 14px 12px;margin-bottom:12px;animation:rise .25s ease both;
   }
+  .card.dragging{opacity:.45;}
   @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-  .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:0 0 8px 2px;}
-  .card .desc{font-size:13.5px;color:var(--text-dim);margin:0;font-weight:500;line-height:1.4;word-break:break-word;flex:1;}
-  .titleedit{display:none;flex:1;}
-  .titleedit.active{display:block;}
+  .card-head{display:flex;align-items:flex-start;gap:8px;margin:0 0 8px 0;}
+  .draghandle{
+    flex-shrink:0;width:24px;height:32px;border:none;background:none;color:var(--text-dim);
+    display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none;opacity:.5;margin-left:-6px;
+  }
+  .draghandle svg{width:15px;height:15px;}
+  .titleblock{flex:1;min-width:0;}
+  .card .desc{font-size:13.5px;color:var(--text-dim);margin:0;font-weight:500;line-height:1.4;word-break:break-word;}
+  .catbadge{
+    display:inline-block;margin-top:4px;font-size:10.5px;color:var(--accent-bright);
+    background:rgba(232,163,61,.12);border-radius:6px;padding:2px 7px;font-weight:600;
+  }
+  .titleedit{display:none;flex-direction:column;gap:6px;}
+  .titleedit.active{display:flex;}
   .titleedit input{
     width:100%;background:var(--surface-2);border:1px solid var(--accent);color:var(--text);
-    border-radius:7px;padding:6px 8px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;
+    border-radius:7px;padding:7px 8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;
   }
-  .card-head.editing .desc{display:none;}
+  .titleedit .miniactions{flex-direction:row;}
+  .titleblock.editing .desc, .titleblock.editing .catbadge{display:none;}
   .titlebtn{
     flex-shrink:0;width:24px;height:24px;border:none;background:none;color:var(--text-dim);
     cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.6;
   }
   .titlebtn svg{width:14px;height:14px;}
   .titlebtn:active{opacity:1;}
+  .headbtns{display:flex;gap:2px;flex-shrink:0;}
 
   .cmdrows{display:flex;flex-direction:column;gap:6px;}
   .cmdbox{
@@ -92,7 +115,7 @@
   }
   .cmdbox.k-username{border-color:#2f4550;}
   .cmdbox.k-password{border-color:#4a3550;}
-  .cmdbox.editing{align-items:flex-start;padding:8px;}
+  .cmdbox.editing{align-items:stretch;padding:8px;flex-direction:column;}
   .cmdbox .editarea{
     flex:1;background:var(--bg);border:1px solid var(--accent);border-radius:8px;color:var(--accent-bright);
     font-family:'JetBrains Mono',monospace;font-size:13px;padding:8px;outline:none;resize:none;min-height:44px;
@@ -155,6 +178,19 @@
   .kindpicker button.active[data-kind="username"]{border-color:var(--type-username);color:var(--type-username);background:rgba(111,179,201,.12);}
   .kindpicker button.active[data-kind="password"]{border-color:var(--type-password);color:var(--type-password);background:rgba(201,143,224,.12);}
 
+  .segpicker{display:flex;gap:6px;}
+  .segpicker button{
+    flex:1;padding:9px 4px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);
+    color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .segpicker button.active{border-color:var(--accent);color:var(--accent-bright);background:rgba(232,163,61,.12);}
+
+  .strengthmeter{margin-top:10px;}
+  .strengthmeter.hidden{display:none;}
+  .strengthbar{height:5px;border-radius:3px;background:var(--border);overflow:hidden;}
+  .strengthbar span{display:block;height:100%;width:0%;border-radius:3px;transition:width .2s ease, background .2s ease;}
+  .strengthlabel{font-size:11px;margin-top:5px;font-weight:600;}
+
   .fab{
     position:fixed;right:20px;bottom:calc(24px + env(safe-area-inset-bottom));
     width:56px;height:56px;border-radius:50%;background:var(--accent);color:#1a1305;border:none;
@@ -174,6 +210,7 @@
     width:100%;max-width:640px;background:var(--surface);border-radius:20px 20px 0 0;
     border:1px solid var(--border);border-bottom:none;padding:20px 18px calc(24px + env(safe-area-inset-bottom));
     transform:translateY(100%);transition:transform .25s cubic-bezier(.32,.72,0,1);
+    max-height:85vh;overflow-y:auto;
   }
   .backdrop.open .sheet{transform:translateY(0);}
   .sheet h2{font-family:'JetBrains Mono',monospace;font-size:16px;margin:0 0 16px;color:var(--text);}
@@ -200,7 +237,7 @@
   #fileImport{display:none;}
 
   .lockscreen{
-    position:fixed;inset:0;background:var(--bg);z-index:200;
+    position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto;
     display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;
   }
   .lockscreen .icon{
@@ -222,12 +259,24 @@
   }
   .lockscreen .err{color:var(--danger);font-size:12.5px;margin-top:10px;min-height:16px;}
   .lockscreen .hint{color:var(--text-dim);font-size:11px;margin-top:22px;line-height:1.6;max-width:290px;}
+  .settingsblock{width:100%;max-width:280px;text-align:left;}
+  .settingsblock label{display:block;font-size:11.5px;color:var(--text-dim);margin:14px 0 6px;font-weight:600;}
   .hidden{display:none !important;}
+
+  .toast{
+    position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(10px);
+    background:var(--surface);border:1px solid var(--border);color:var(--text);padding:11px 18px;
+    border-radius:11px;font-size:13px;opacity:0;pointer-events:none;transition:all .25s ease;z-index:90;
+    box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:80vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
 
 <div class="lockscreen hidden" id="lockScreen"></div>
+<div class="toast" id="toast"></div>
+<datalist id="categoryList"></datalist>
 
 <div class="wrap" id="mainApp" style="display:none;">
   <header>
@@ -236,8 +285,8 @@
       <button class="iconbtn" id="lockBtn" title="Lukitse">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3" stroke-linecap="round"/></svg>
       </button>
-      <button class="iconbtn" id="changePwBtn" title="Vaihda pääsalasana">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3"/><path d="M6 21v-1a6 6 0 0112 0v1" stroke-linecap="round"/></svg>
+      <button class="iconbtn" id="settingsBtn" title="Asetukset">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09A1.65 1.65 0 0015 5a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       </button>
       <button class="iconbtn" id="exportBtn" title="Vie salattu varmuuskopio">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -250,6 +299,7 @@
   </header>
 
   <div class="search"><input type="text" id="searchInput" placeholder="Hae komentoja..."></div>
+  <div class="catchips hidden" id="catChips"></div>
 
   <div id="list"></div>
 </div>
@@ -264,11 +314,14 @@
       <input type="text" id="descInput" placeholder="Esim. Proxmox VE -asennus">
     </div>
     <div class="field">
+      <label>Kategoria (valinnainen)</label>
+      <input type="text" id="categoryInput" placeholder="Esim. Palvelimet" list="categoryList">
+    </div>
+    <div class="field">
       <label>Ensimmäinen rivi</label>
       <textarea id="cmdInput" placeholder="bash -c &quot;$(curl -fsSL https://...)&quot;" rows="3"></textarea>
-      <div class="kindpicker" id="sheetKindPicker">
-        <button type="button" class="kindkind active" data-kind="command"></button>
-      </div>
+      <div class="kindpicker" id="sheetKindPicker"></div>
+      <div class="strengthmeter hidden" id="sheetStrength"><div class="strengthbar"><span></span></div><div class="strengthlabel"></div></div>
     </div>
     <div class="sheet-actions">
       <button class="btn-cancel" id="cancelBtn">Peruuta</button>
@@ -308,6 +361,15 @@ async function decryptStr(key, {iv, ct}){
   return dec.decode(ptBuf);
 }
 
+/* ---------- Settings (non-sensitive, plaintext) ---------- */
+const SETTINGS_KEY = 'komennot_settings_v1';
+function getSettings(){
+  try{ return { autoLockMinutes: 5, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; }
+  catch(e){ return { autoLockMinutes: 5 }; }
+}
+function saveSettings(s){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
+let settings = getSettings();
+
 /* ---------- Vault state ---------- */
 const VAULT_KEY = 'komennot_vault_v1';
 const LEGACY_V2 = 'komennot_v2';
@@ -321,25 +383,17 @@ let inactivityTimer = null;
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
-function normalizeKind(cmd){
-  // migration: old rows had `sensitive: true/false`, new rows have `kind`
-  if(cmd.kind) return cmd.kind;
-  return cmd.sensitive ? 'password' : 'command';
-}
+function normalizeCmd(c){ return { id: c.id || uid(), cmd: c.cmd, kind: c.kind || (c.sensitive ? 'password' : 'command') }; }
+function normalizeGroup(g){ return { id: g.id || uid(), title: g.title || g.desc || 'Ilman kuvausta', category: g.category || '', created: g.created || Date.now(), commands: (g.commands || []).map(normalizeCmd) }; }
 
 function getLegacyGroups(){
   const v2 = localStorage.getItem(LEGACY_V2);
-  if(v2){
-    try{
-      const parsed = JSON.parse(v2);
-      return parsed.map(g => ({ ...g, commands: g.commands.map(c => ({ id:c.id, cmd:c.cmd, kind: normalizeKind(c) })) }));
-    }catch(e){}
-  }
+  if(v2){ try{ return JSON.parse(v2).map(normalizeGroup); }catch(e){} }
   const v1 = localStorage.getItem(LEGACY_V1);
   if(v1){
     try{
       const old = JSON.parse(v1);
-      return old.map(it => ({ id: it.id || uid(), title: it.desc || 'Ilman kuvausta', created: it.created || Date.now(), commands: [{ id: uid(), cmd: it.cmd, kind:'command' }] }));
+      return old.map(it => normalizeGroup({ id: it.id, title: it.desc, created: it.created, commands: [{ cmd: it.cmd, kind:'command' }] }));
     }catch(e){}
   }
   return null;
@@ -363,14 +417,37 @@ function lockNow(){
 
 function resetInactivityTimer(){
   clearTimeout(inactivityTimer);
-  if(cryptoKey) inactivityTimer = setTimeout(lockNow, 5*60*1000);
+  if(cryptoKey && settings.autoLockMinutes > 0){
+    inactivityTimer = setTimeout(lockNow, settings.autoLockMinutes*60*1000);
+  }
 }
 ['click','keydown','touchstart'].forEach(evt => document.addEventListener(evt, resetInactivityTimer));
 document.addEventListener('visibilitychange', () => { if(document.hidden && cryptoKey) lockNow(); });
 
-/* ---------- Lock/setup screens ---------- */
+function vibrate(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg){
+  clearTimeout(toastTimer);
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+}
+
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); }
+  catch(err){
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); ta.remove();
+  }
+}
+
+/* ---------- Lock/setup/settings screens ---------- */
 const lockScreenEl = document.getElementById('lockScreen');
 const lockIconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3" stroke-linecap="round"/></svg>';
+const gearIconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09A1.65 1.65 0 0015 5a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
 
 function showSetupScreen(hasLegacyData){
   lockScreenEl.classList.remove('hidden');
@@ -425,8 +502,7 @@ function showLockedScreen(){
     try{
       const key = await deriveKey(pw, vault.salt, vault.iterations);
       const plaintext = await decryptStr(key, vault.data);
-      const parsed = JSON.parse(plaintext);
-      groups = parsed.map(g => ({ ...g, commands: g.commands.map(c => ({ id:c.id, cmd:c.cmd, kind: normalizeKind(c) })) }));
+      groups = JSON.parse(plaintext).map(normalizeGroup);
       cryptoKey = key;
       err.textContent = '';
       enterApp();
@@ -454,7 +530,7 @@ async function initApp(){
 
 document.getElementById('lockBtn').onclick = lockNow;
 
-document.getElementById('changePwBtn').onclick = () => {
+function showChangePasswordScreen(){
   lockScreenEl.classList.remove('hidden');
   lockScreenEl.innerHTML = `
     <div class="icon">${lockIconSvg}</div>
@@ -486,26 +562,65 @@ document.getElementById('changePwBtn').onclick = () => {
     await saveVault();
     lockScreenEl.classList.add('hidden');
     lockScreenEl.innerHTML = '';
+    showToast('Pääsalasana vaihdettu');
   };
-};
+}
 
-/* ---------- Kind metadata ---------- */
+const autoLockOptions = [{min:1,label:'1 min'},{min:5,label:'5 min'},{min:15,label:'15 min'},{min:0,label:'Ei koskaan'}];
+
+function showSettingsScreen(){
+  lockScreenEl.classList.remove('hidden');
+  lockScreenEl.innerHTML = `
+    <div class="icon">${gearIconSvg}</div>
+    <h2>Asetukset</h2>
+    <div class="settingsblock">
+      <label>Lukitse automaattisesti käyttämättömyyden jälkeen</label>
+      <div class="segpicker" id="autoLockPicker">
+        ${autoLockOptions.map(o => `<button type="button" data-min="${o.min}" class="${settings.autoLockMinutes===o.min?'active':''}">${o.label}</button>`).join('')}
+      </div>
+      <label>Ryhmät</label>
+      <button class="primary" id="sortBtn" style="background:var(--surface-2);color:var(--text);">Lajittele A-Ö</button>
+      <label>Tili</label>
+      <button class="primary" id="openChangePwBtn" style="background:var(--surface-2);color:var(--text);">Vaihda pääsalasana</button>
+    </div>
+    <button class="primary" id="closeSettingsBtn" style="background:transparent;color:var(--text-dim);margin-top:22px;">Sulje</button>
+  `;
+  document.getElementById('autoLockPicker').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-min]');
+    if(!btn) return;
+    settings.autoLockMinutes = parseInt(btn.dataset.min, 10);
+    saveSettings(settings);
+    document.querySelectorAll('#autoLockPicker button').forEach(b => b.classList.toggle('active', b === btn));
+    resetInactivityTimer();
+  });
+  document.getElementById('sortBtn').onclick = async () => {
+    groups.sort((a,b) => a.title.localeCompare(b.title, 'fi'));
+    await saveVault(); render();
+    showToast('Ryhmät lajiteltu');
+  };
+  document.getElementById('openChangePwBtn').onclick = showChangePasswordScreen;
+  document.getElementById('closeSettingsBtn').onclick = () => { lockScreenEl.classList.add('hidden'); lockScreenEl.innerHTML=''; };
+}
+document.getElementById('settingsBtn').onclick = showSettingsScreen;
+
+/* ---------- Kind metadata & password strength ---------- */
 const kindMeta = {
-  command:  { label:'Komento',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l6 6-6 6M14 18h6" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
-  username: { label:'Käyttäjätunnus',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
-  password: { label:'Salasana',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5L20 3M17 6l3 3M14 9l2 2" stroke-linecap="round" stroke-linejoin="round"/></svg>' }
+  command:  { label:'Komento',        icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l6 6-6 6M14 18h6" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+  username: { label:'Käyttäjätunnus', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+  password: { label:'Salasana',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5L20 3M17 6l3 3M14 9l2 2" stroke-linecap="round" stroke-linejoin="round"/></svg>' }
 };
-function kindPickerHtml(activeKind, extraClass){
+function kindPickerHtml(activeKind){
   return Object.keys(kindMeta).map(k => `
-    <button type="button" class="${extraClass} ${k === activeKind ? 'active' : ''}" data-kind="${k}">
+    <button type="button" class="${k === activeKind ? 'active' : ''}" data-kind="${k}">
       ${kindMeta[k].icon}<span>${kindMeta[k].label}</span>
     </button>`).join('');
 }
-function wireKindPicker(containerEl){
+function wireKindPicker(containerEl, onChange){
   containerEl.querySelectorAll('button[data-kind]').forEach(btn => {
     btn.addEventListener('click', () => {
       containerEl.querySelectorAll('button[data-kind]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      if(onChange) onChange();
     });
   });
 }
@@ -514,22 +629,64 @@ function getSelectedKind(containerEl){
   return active ? active.dataset.kind : 'command';
 }
 
+function computeStrength(pw){
+  if(!pw) return { score:0, label:'', color:'var(--border)', pct:0 };
+  let score = 0;
+  if(pw.length >= 8) score++;
+  if(pw.length >= 12) score++;
+  if(/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if(/\d/.test(pw)) score++;
+  if(/[^A-Za-z0-9]/.test(pw)) score++;
+  const pct = Math.min(score,5)/5*100;
+  let label, color;
+  if(score <= 1){ label='Heikko'; color='var(--danger)'; }
+  else if(score === 2){ label='Kohtalainen'; color='var(--type-command)'; }
+  else if(score === 3){ label='Hyvä'; color='var(--ok)'; }
+  else { label='Vahva'; color='var(--good)'; }
+  return { score, label, color, pct };
+}
+function wireStrengthMeter(textareaEl, meterEl, kindContainerEl){
+  function refresh(){
+    const kind = getSelectedKind(kindContainerEl);
+    if(kind === 'password'){
+      meterEl.classList.remove('hidden');
+      const s = computeStrength(textareaEl.value);
+      const bar = meterEl.querySelector('.strengthbar span');
+      const label = meterEl.querySelector('.strengthlabel');
+      bar.style.width = s.pct + '%';
+      bar.style.background = s.color;
+      label.textContent = s.label;
+      label.style.color = s.color;
+    } else {
+      meterEl.classList.add('hidden');
+    }
+  }
+  textareaEl.addEventListener('input', refresh);
+  wireKindPicker(kindContainerEl, refresh);
+  refresh();
+}
+
 /* ---------- Main app rendering ---------- */
 const listEl = document.getElementById('list');
 const backdrop = document.getElementById('backdrop');
 const descInput = document.getElementById('descInput');
+const categoryInput = document.getElementById('categoryInput');
 const cmdInput = document.getElementById('cmdInput');
 const sheetTitle = document.getElementById('sheetTitle');
 const searchInput = document.getElementById('searchInput');
 const sheetKindPicker = document.getElementById('sheetKindPicker');
-sheetKindPicker.innerHTML = kindPickerHtml('command', 'kindpicker-btn-placeholder');
-sheetKindPicker.className = 'kindpicker';
-sheetKindPicker.querySelectorAll('button').forEach(b => b.classList.remove('kindpicker-btn-placeholder'));
-wireKindPicker(sheetKindPicker);
+const sheetStrength = document.getElementById('sheetStrength');
+const catChipsEl = document.getElementById('catChips');
+const categoryListEl = document.getElementById('categoryList');
+
+sheetKindPicker.innerHTML = kindPickerHtml('command');
+wireStrengthMeter(cmdInput, sheetStrength, sheetKindPicker);
 
 let openAddRowFor = null;
 let openEditRow = null;
 let openTitleEdit = null;
+let selectedCategory = null; // null = "Kaikki"
+let draggingEl = null;
 
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -542,12 +699,14 @@ const pencilIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const plusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>';
 const eyeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
 const eyeOffIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.6 20.6 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.4 20.4 0 01-3.22 4.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>';
+const gripIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg>';
+const layersIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5-9 5-9-5 9-5z" stroke-linejoin="round"/><path d="M3 12l9 5 9-5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 17l9 5 9-5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function renderCmdRow(group, cmd){
   const isEditing = openEditRow && openEditRow.groupId === group.id && openEditRow.cmdId === cmd.id;
   if(isEditing){
     return `
-      <div class="cmdbox editing" data-cmdid="${cmd.id}" style="flex-direction:column;align-items:stretch;">
+      <div class="cmdbox editing" data-cmdid="${cmd.id}">
         <div style="display:flex;gap:8px;align-items:flex-start;">
           <textarea class="editarea" rows="2">${escapeHtml(cmd.cmd)}</textarea>
           <div class="miniactions">
@@ -555,7 +714,8 @@ function renderCmdRow(group, cmd){
             <button class="cancel cancelRow">✕</button>
           </div>
         </div>
-        <div class="kindpicker editRowKindPicker">${kindPickerHtml(cmd.kind, 'editkindbtn')}</div>
+        <div class="kindpicker editRowKindPicker">${kindPickerHtml(cmd.kind)}</div>
+        <div class="strengthmeter hidden editRowStrength"><div class="strengthbar"><span></span></div><div class="strengthlabel"></div></div>
       </div>`;
   }
   const revealed = revealedIds.has(cmd.id);
@@ -572,10 +732,37 @@ function renderCmdRow(group, cmd){
     </div>`;
 }
 
+function getAllCategories(){
+  const set = new Set();
+  groups.forEach(g => { if(g.category && g.category.trim()) set.add(g.category.trim()); });
+  return [...set].sort((a,b) => a.localeCompare(b, 'fi'));
+}
+
+function renderCatChips(){
+  const cats = getAllCategories();
+  if(cats.length === 0){ catChipsEl.classList.add('hidden'); catChipsEl.innerHTML=''; return; }
+  catChipsEl.classList.remove('hidden');
+  catChipsEl.innerHTML = `
+    <button class="catchip ${selectedCategory === null ? 'active' : ''}" data-cat="">Kaikki</button>
+    ${cats.map(c => `<button class="catchip ${selectedCategory === c ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('')}
+  `;
+  categoryListEl.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">`).join('');
+}
+catChipsEl.addEventListener('click', e => {
+  const chip = e.target.closest('.catchip');
+  if(!chip) return;
+  selectedCategory = chip.dataset.cat || null;
+  render();
+});
+
 function render(){
+  renderCatChips();
   const q = searchInput.value.trim().toLowerCase();
+  const noFilterActive = !q && selectedCategory === null;
+
   const filtered = groups
     .map(g => {
+      if(selectedCategory !== null && (g.category || '') !== selectedCategory) return null;
       if(!q) return g;
       const titleHit = g.title.toLowerCase().includes(q);
       const cmds = titleHit ? g.commands : g.commands.filter(c => c.cmd.toLowerCase().includes(q));
@@ -593,18 +780,31 @@ function render(){
   listEl.innerHTML = filtered.map(g => `
     <div class="card" data-id="${g.id}">
       <div class="card-head">
-        <p class="desc">${escapeHtml(g.title)}</p>
-        <div class="titleedit ${openTitleEdit === g.id ? 'active' : ''}">
-          <input type="text" class="titleInput" data-gid="${g.id}" value="${escapeHtml(g.title)}">
+        ${noFilterActive ? `<button class="draghandle" title="Raahaa järjestääksesi">${gripIcon}</button>` : ''}
+        <div class="titleblock">
+          <p class="desc">${escapeHtml(g.title)}</p>
+          ${g.category ? `<span class="catbadge">${escapeHtml(g.category)}</span>` : ''}
+          <div class="titleedit ${openTitleEdit === g.id ? 'active' : ''}">
+            <input type="text" class="titleInputField" data-gid="${g.id}" value="${escapeHtml(g.title)}" placeholder="Otsikko">
+            <input type="text" class="categoryInputField" data-gid="${g.id}" value="${escapeHtml(g.category || '')}" placeholder="Kategoria (valinnainen)" list="categoryList">
+            <div class="miniactions">
+              <button class="ok saveTitleBtn" data-gid="${g.id}">${checkIcon}</button>
+              <button class="cancel cancelTitleBtn">✕</button>
+            </div>
+          </div>
         </div>
-        <button class="titlebtn renameGroup" data-gid="${g.id}" title="Nimeä uudelleen">${pencilIcon}</button>
-        <button class="titlebtn delGroup" data-gid="${g.id}" title="Poista ryhmä">${trashIcon}</button>
+        <div class="headbtns">
+          <button class="titlebtn copyGroupBtn" data-gid="${g.id}" title="Kopioi ryhmä">${layersIcon}</button>
+          <button class="titlebtn renameGroup" data-gid="${g.id}" title="Nimeä uudelleen">${pencilIcon}</button>
+          <button class="titlebtn delGroup" data-gid="${g.id}" title="Poista ryhmä">${trashIcon}</button>
+        </div>
       </div>
       <div class="cmdrows">${g.commands.map(c => renderCmdRow(g, c)).join('')}</div>
       ${openAddRowFor === g.id ? `
         <div class="newrowbox">
           <textarea class="newRowInput" rows="2" placeholder="Uusi rivi..."></textarea>
-          <div class="kindpicker newRowKindPicker">${kindPickerHtml('command', 'newkindbtn')}</div>
+          <div class="kindpicker newRowKindPicker">${kindPickerHtml('command')}</div>
+          <div class="strengthmeter hidden newRowStrength"><div class="strengthbar"><span></span></div><div class="strengthlabel"></div></div>
           <div class="sheet-actions">
             <button class="btn-cancel cancelAddRow">Peruuta</button>
             <button class="btn-save confirmAddRow" data-gid="${g.id}">Lisää</button>
@@ -615,30 +815,79 @@ function render(){
   `).join('');
 
   if(openTitleEdit){
-    const inp = listEl.querySelector(`.titleInput[data-gid="${openTitleEdit}"]`);
-    const head = inp && inp.closest('.card-head');
-    if(head) head.classList.add('editing');
-    if(inp){ inp.focus(); inp.select(); }
+    const titleField = listEl.querySelector(`.titleInputField[data-gid="${openTitleEdit}"]`);
+    const block = titleField && titleField.closest('.titleblock');
+    if(block) block.classList.add('editing');
+    if(titleField){ titleField.focus(); titleField.select(); }
   }
   if(openAddRowFor){
     const ta = listEl.querySelector('.newRowInput');
-    if(ta) ta.focus();
     const picker = listEl.querySelector('.newRowKindPicker');
-    if(picker) wireKindPicker(picker);
+    const meter = listEl.querySelector('.newRowStrength');
+    if(ta) ta.focus();
+    if(picker && meter) wireStrengthMeter(ta, meter, picker);
   }
   if(openEditRow){
     const ta = listEl.querySelector('.editarea');
-    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
     const picker = listEl.querySelector('.editRowKindPicker');
-    if(picker) wireKindPicker(picker);
+    const meter = listEl.querySelector('.editRowStrength');
+    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    if(picker && meter) wireStrengthMeter(ta, meter, picker);
   }
+  wireDragHandles();
 }
 
+/* ---------- Drag & drop reordering ---------- */
+function wireDragHandles(){
+  listEl.querySelectorAll('.draghandle').forEach(handle => {
+    handle.addEventListener('pointerdown', onDragStart);
+  });
+}
+function getDragAfterElement(container, y){
+  const cards = [...container.querySelectorAll('.card:not(.dragging)')];
+  return cards.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height/2;
+    if(offset < 0 && offset > closest.offset) return { offset, element: child };
+    return closest;
+  }, { offset: -Infinity, element: null }).element;
+}
+function onDragStart(e){
+  const handle = e.currentTarget;
+  const card = handle.closest('.card');
+  if(!card) return;
+  handle.setPointerCapture(e.pointerId);
+  card.classList.add('dragging');
+  draggingEl = card;
+
+  function onMove(ev){
+    const after = getDragAfterElement(listEl, ev.clientY);
+    if(after == null) listEl.appendChild(card);
+    else listEl.insertBefore(card, after);
+  }
+  function onUp(){
+    card.classList.remove('dragging');
+    handle.removeEventListener('pointermove', onMove);
+    handle.removeEventListener('pointerup', onUp);
+    handle.removeEventListener('pointercancel', onUp);
+    const newOrderIds = [...listEl.querySelectorAll('.card')].map(c => c.dataset.id);
+    groups.sort((a,b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+    draggingEl = null;
+    saveVault();
+  }
+  handle.addEventListener('pointermove', onMove);
+  handle.addEventListener('pointerup', onUp);
+  handle.addEventListener('pointercancel', onUp);
+}
+
+/* ---------- New group sheet ---------- */
 function openSheet(){
   sheetTitle.textContent = 'Uusi ryhmä';
   descInput.value = '';
+  categoryInput.value = '';
   cmdInput.value = '';
   sheetKindPicker.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.kind === 'command'));
+  sheetStrength.classList.add('hidden');
   backdrop.classList.add('open');
   setTimeout(() => descInput.focus(), 200);
 }
@@ -650,24 +899,40 @@ backdrop.addEventListener('click', e => { if(e.target === backdrop) closeSheet()
 
 document.getElementById('saveBtn').onclick = async () => {
   const title = descInput.value.trim();
+  const category = categoryInput.value.trim();
   const cmd = cmdInput.value.trim();
   if(!cmd){ cmdInput.focus(); return; }
   const kind = getSelectedKind(sheetKindPicker);
-  groups.unshift({ id: uid(), title: title || 'Ilman kuvausta', created: Date.now(), commands: [{ id: uid(), cmd, kind }] });
+  groups.unshift({ id: uid(), title: title || 'Ilman kuvausta', category, created: Date.now(), commands: [{ id: uid(), cmd, kind }] });
   await saveVault(); render(); closeSheet();
 };
 
-async function copyText(text){
-  try{ await navigator.clipboard.writeText(text); }
-  catch(err){
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta);
-    ta.select(); document.execCommand('copy'); ta.remove();
+/* ---------- Group-level copy action ---------- */
+async function copyGroupAction(group){
+  const username = group.commands.find(c => c.kind === 'username');
+  const password = group.commands.find(c => c.kind === 'password');
+  if(username && password){
+    await copyText(username.cmd);
+    vibrate(15);
+    showToast('Käyttäjätunnus kopioitu — liitä se nyt');
+    setTimeout(async () => {
+      await copyText(password.cmd);
+      vibrate(15);
+      showToast('Salasana kopioitu — liitä se nyt');
+      setTimeout(() => copyText(''), 20000);
+    }, 4000);
+  } else {
+    const joined = group.commands.map(c => c.cmd).join('\n');
+    await copyText(joined);
+    vibrate(15);
+    showToast('Koko ryhmä kopioitu leikepöydälle');
   }
 }
 
+/* ---------- Event delegation for list ---------- */
 listEl.addEventListener('click', async (e) => {
   const copyBtn = e.target.closest('.copybtn');
+  const copyGroupBtn = e.target.closest('.copyGroupBtn');
   const renameBtn = e.target.closest('.renameGroup');
   const delGroupBtn = e.target.closest('.delGroup');
   const delRowBtn = e.target.closest('.delRow');
@@ -678,6 +943,8 @@ listEl.addEventListener('click', async (e) => {
   const confirmAddRowBtn = e.target.closest('.confirmAddRow');
   const saveRowBtn = e.target.closest('.saveRow');
   const cancelRowBtn = e.target.closest('.cancelRow');
+  const saveTitleBtn = e.target.closest('.saveTitleBtn');
+  const cancelTitleBtn = e.target.closest('.cancelTitleBtn');
 
   if(toggleRevealBtn){
     const cid = toggleRevealBtn.dataset.cid;
@@ -686,10 +953,16 @@ listEl.addEventListener('click', async (e) => {
     render();
     return;
   }
+  if(copyGroupBtn){
+    const g = groups.find(x => x.id === copyGroupBtn.dataset.gid);
+    if(g) copyGroupAction(g);
+    return;
+  }
   if(copyBtn){
     const text = decodeURIComponent(copyBtn.dataset.cmd);
     const kind = copyBtn.dataset.kind;
     await copyText(text);
+    vibrate(12);
     copyBtn.classList.add('copied');
     copyBtn.innerHTML = checkIcon;
     setTimeout(() => { copyBtn.classList.remove('copied'); copyBtn.innerHTML = copyIcon; }, 1400);
@@ -697,6 +970,20 @@ listEl.addEventListener('click', async (e) => {
     return;
   }
   if(renameBtn){ openTitleEdit = renameBtn.dataset.gid; render(); return; }
+  if(saveTitleBtn){
+    const gid = saveTitleBtn.dataset.gid;
+    const g = groups.find(x => x.id === gid);
+    const titleField = listEl.querySelector(`.titleInputField[data-gid="${gid}"]`);
+    const catField = listEl.querySelector(`.categoryInputField[data-gid="${gid}"]`);
+    if(g){
+      g.title = titleField.value.trim() || 'Ilman kuvausta';
+      g.category = catField.value.trim();
+    }
+    openTitleEdit = null;
+    await saveVault(); render();
+    return;
+  }
+  if(cancelTitleBtn){ openTitleEdit = null; render(); return; }
   if(delGroupBtn){
     if(confirm('Poistetaanko koko ryhmä komentoineen?')){
       groups = groups.filter(g => g.id !== delGroupBtn.dataset.gid);
@@ -750,18 +1037,12 @@ listEl.addEventListener('click', async (e) => {
 });
 
 listEl.addEventListener('keydown', e => {
-  if(e.target.classList.contains('titleInput') && e.key === 'Enter'){ e.preventDefault(); e.target.blur(); }
-});
-listEl.addEventListener('focusout', async (e) => {
-  if(e.target.classList.contains('titleInput')){
+  if((e.target.classList.contains('titleInputField') || e.target.classList.contains('categoryInputField')) && e.key === 'Enter'){
+    e.preventDefault();
     const gid = e.target.dataset.gid;
-    const g = groups.find(x => x.id === gid);
-    const val = e.target.value.trim();
-    if(g) g.title = val || 'Ilman kuvausta';
-    openTitleEdit = null;
-    await saveVault(); render();
+    listEl.querySelector(`.saveTitleBtn[data-gid="${gid}"]`).click();
   }
-}, true);
+});
 
 searchInput.addEventListener('input', render);
 
