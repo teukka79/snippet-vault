@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Komennot">
+<meta name="theme-color" content="#0f0d0a">
+<title>Komennot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f0d0a;
+    --surface:#1a1611;
+    --surface-2:#221d17;
+    --border:#332b21;
+    --text:#ede6d9;
+    --text-dim:#8a8070;
+    --accent:#e8a33d;
+    --accent-bright:#ffcb66;
+    --danger:#c0654f;
+    --type-command:#e8a33d;
+    --type-username:#6fb3c9;
+    --type-password:#c98fe0;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background: radial-gradient(1200px 600px at 50% -10%, #1c1712 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+    min-height:100%;
+    overscroll-behavior-y:none;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 120px;}
+
+  header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;padding:4px 2px;}
+  header h1{
+    font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;margin:0;letter-spacing:-0.02em;
+    display:flex;align-items:center;gap:8px;
+  }
+  header h1::before{
+    content:"";width:9px;height:9px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 8px var(--accent);display:inline-block;
+  }
+
+  .search{display:flex;gap:8px;margin-bottom:16px;}
+  .search input{
+    flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:11px 13px;font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;
+  }
+  .search input::placeholder{color:var(--text-dim);}
+  .search input:focus{border-color:var(--accent);}
+
+  .empty{text-align:center;color:var(--text-dim);padding:60px 20px;font-size:14px;line-height:1.6;}
+  .empty b{color:var(--text);}
+
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:14px 14px 12px;margin-bottom:12px;animation:rise .25s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:0 0 8px 2px;}
+  .card .desc{font-size:13.5px;color:var(--text-dim);margin:0;font-weight:500;line-height:1.4;word-break:break-word;flex:1;}
+  .titleedit{display:none;flex:1;}
+  .titleedit.active{display:block;}
+  .titleedit input{
+    width:100%;background:var(--surface-2);border:1px solid var(--accent);color:var(--text);
+    border-radius:7px;padding:6px 8px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;
+  }
+  .card-head.editing .desc{display:none;}
+  .titlebtn{
+    flex-shrink:0;width:24px;height:24px;border:none;background:none;color:var(--text-dim);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.6;
+  }
+  .titlebtn svg{width:14px;height:14px;}
+  .titlebtn:active{opacity:1;}
+
+  .cmdrows{display:flex;flex-direction:column;gap:6px;}
+  .cmdbox{
+    background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
+    display:flex;align-items:center;gap:6px;padding:10px 8px 10px 10px;
+  }
+  .cmdbox.k-username{border-color:#2f4550;}
+  .cmdbox.k-password{border-color:#4a3550;}
+  .cmdbox.editing{align-items:flex-start;padding:8px;}
+  .cmdbox .editarea{
+    flex:1;background:var(--bg);border:1px solid var(--accent);border-radius:8px;color:var(--accent-bright);
+    font-family:'JetBrains Mono',monospace;font-size:13px;padding:8px;outline:none;resize:none;min-height:44px;
+  }
+  .miniactions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+  .miniactions button{width:26px;height:26px;border-radius:6px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .miniactions .ok{background:rgba(232,163,61,.2);color:var(--accent-bright);}
+  .miniactions .cancel{background:var(--border);color:var(--text-dim);}
+  .miniactions svg{width:13px;height:13px;}
+
+  .kindbadge{flex-shrink:0;width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;}
+  .kindbadge svg{width:12px;height:12px;}
+  .kindbadge.k-command{background:rgba(232,163,61,.15);color:var(--type-command);}
+  .kindbadge.k-username{background:rgba(111,179,201,.15);color:var(--type-username);}
+  .kindbadge.k-password{background:rgba(201,143,224,.15);color:var(--type-password);}
+
+  .cmdtext{
+    flex:1;min-width:0;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent-bright);
+    white-space:nowrap;overflow-x:auto;scrollbar-width:none;padding:2px 0;cursor:pointer;
+  }
+  .cmdtext::-webkit-scrollbar{display:none;}
+  .cmdtext.k-username{color:var(--type-username);}
+  .cmdtext.k-password{color:var(--type-password);}
+  .cmdtext.masked{letter-spacing:3px;color:var(--text-dim);user-select:none;}
+
+  .eyebtn, .copybtn, .rowbtn{
+    flex-shrink:0;width:30px;height:30px;border-radius:8px;border:none;background:transparent;
+    color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .copybtn{background:#2a231b;border:1px solid var(--border);}
+  .copybtn svg, .eyebtn svg, .rowbtn svg{width:14px;height:14px;}
+  .copybtn:active{transform:scale(.9);}
+  .copybtn.copied{background:rgba(232,163,61,.18);border-color:var(--accent);color:var(--accent-bright);}
+  .rowbtn:active{color:var(--danger);}
+
+  .addrow{
+    margin-top:8px;width:100%;padding:9px;border-radius:9px;border:1px dashed var(--border);
+    background:transparent;color:var(--text-dim);font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .addrow:active{border-color:var(--accent);color:var(--accent-bright);}
+  .addrow svg{width:13px;height:13px;}
+
+  .newrowbox{margin-top:6px;background:var(--surface-2);border:1px solid var(--accent);border-radius:10px;padding:10px;}
+  .newrowbox textarea{
+    width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--accent-bright);
+    font-family:'JetBrains Mono',monospace;font-size:13px;padding:8px;outline:none;resize:none;min-height:44px;box-sizing:border-box;
+  }
+  .newrowbox .sheet-actions{margin-top:10px;}
+  .newrowbox .sheet-actions button{padding:9px;font-size:13px;}
+
+  .kindpicker{display:flex;gap:6px;margin:10px 0 0;}
+  .kindpicker button{
+    flex:1;padding:9px 4px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);
+    color:var(--text-dim);font-size:11.5px;font-weight:600;display:flex;flex-direction:column;
+    align-items:center;gap:4px;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .kindpicker button svg{width:15px;height:15px;}
+  .kindpicker button.active[data-kind="command"]{border-color:var(--type-command);color:var(--type-command);background:rgba(232,163,61,.12);}
+  .kindpicker button.active[data-kind="username"]{border-color:var(--type-username);color:var(--type-username);background:rgba(111,179,201,.12);}
+  .kindpicker button.active[data-kind="password"]{border-color:var(--type-password);color:var(--type-password);background:rgba(201,143,224,.12);}
+
+  .fab{
+    position:fixed;right:20px;bottom:calc(24px + env(safe-area-inset-bottom));
+    width:56px;height:56px;border-radius:50%;background:var(--accent);color:#1a1305;border:none;
+    font-size:28px;font-weight:600;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 20px rgba(232,163,61,.35), 0 2px 6px rgba(0,0,0,.4);cursor:pointer;transition:transform .12s ease;
+  }
+  .fab:active{transform:scale(.92);}
+
+  .backdrop{
+    position:fixed;inset:0;background:rgba(6,5,3,.6);backdrop-filter:blur(2px);
+    display:flex;align-items:flex-end;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:50;
+  }
+  .backdrop.open{opacity:1;pointer-events:auto;}
+  .sheet{
+    width:100%;max-width:640px;background:var(--surface);border-radius:20px 20px 0 0;
+    border:1px solid var(--border);border-bottom:none;padding:20px 18px calc(24px + env(safe-area-inset-bottom));
+    transform:translateY(100%);transition:transform .25s cubic-bezier(.32,.72,0,1);
+  }
+  .backdrop.open .sheet{transform:translateY(0);}
+  .sheet h2{font-family:'JetBrains Mono',monospace;font-size:16px;margin:0 0 16px;color:var(--text);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px;font-weight:500;}
+  .field input, .field textarea{
+    width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:11px 12px;font-size:14px;outline:none;font-family:'Inter',sans-serif;resize:none;
+  }
+  .field textarea{font-family:'JetBrains Mono',monospace;font-size:13.5px;color:var(--accent-bright);min-height:70px;}
+  .field input:focus, .field textarea:focus{border-color:var(--accent);}
+  .sheet-actions{display:flex;gap:10px;margin-top:6px;}
+  .sheet-actions button{flex:1;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+  .btn-cancel{background:var(--surface-2);color:var(--text-dim);}
+  .btn-save{background:var(--accent);color:#1a1305;}
+  .btn-save:active, .btn-cancel:active{transform:scale(.98);}
+
+  .topbtns{display:flex;gap:8px;}
+  .iconbtn{
+    background:var(--surface);border:1px solid var(--border);color:var(--text-dim);width:34px;height:34px;
+    border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .iconbtn svg{width:15px;height:15px;}
+  #fileImport{display:none;}
+
+  .lockscreen{
+    position:fixed;inset:0;background:var(--bg);z-index:200;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;
+  }
+  .lockscreen .icon{
+    width:52px;height:52px;border-radius:16px;background:var(--surface);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;margin-bottom:18px;color:var(--accent);
+  }
+  .lockscreen .icon svg{width:24px;height:24px;}
+  .lockscreen h2{font-family:'JetBrains Mono',monospace;font-size:18px;margin:0 0 8px;}
+  .lockscreen p{color:var(--text-dim);font-size:13px;max-width:300px;margin:0 0 20px;line-height:1.55;}
+  .lockscreen input{
+    width:100%;max-width:280px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:12px 14px;font-size:15px;margin-bottom:10px;outline:none;text-align:center;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .lockscreen input:focus{border-color:var(--accent);}
+  .lockscreen button.primary{
+    width:100%;max-width:280px;padding:13px;border-radius:10px;border:none;background:var(--accent);
+    color:#1a1305;font-weight:700;font-size:14px;cursor:pointer;margin-top:4px;
+  }
+  .lockscreen .err{color:var(--danger);font-size:12.5px;margin-top:10px;min-height:16px;}
+  .lockscreen .hint{color:var(--text-dim);font-size:11px;margin-top:22px;line-height:1.6;max-width:290px;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="lockscreen hidden" id="lockScreen"></div>
+
+<div class="wrap" id="mainApp" style="display:none;">
+  <header>
+    <h1>komennot</h1>
+    <div class="topbtns">
+      <button class="iconbtn" id="lockBtn" title="Lukitse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3" stroke-linecap="round"/></svg>
+      </button>
+      <button class="iconbtn" id="changePwBtn" title="Vaihda pääsalasana">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3"/><path d="M6 21v-1a6 6 0 0112 0v1" stroke-linecap="round"/></svg>
+      </button>
+      <button class="iconbtn" id="exportBtn" title="Vie salattu varmuuskopio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="iconbtn" id="importBtn" title="Tuo varmuuskopio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <input type="file" id="fileImport" accept="application/json">
+    </div>
+  </header>
+
+  <div class="search"><input type="text" id="searchInput" placeholder="Hae komentoja..."></div>
+
+  <div id="list"></div>
+</div>
+
+<button class="fab hidden" id="addFab">+</button>
+
+<div class="backdrop" id="backdrop">
+  <div class="sheet">
+    <h2 id="sheetTitle">Uusi ryhmä</h2>
+    <div class="field">
+      <label>Otsikko</label>
+      <input type="text" id="descInput" placeholder="Esim. Proxmox VE -asennus">
+    </div>
+    <div class="field">
+      <label>Ensimmäinen rivi</label>
+      <textarea id="cmdInput" placeholder="bash -c &quot;$(curl -fsSL https://...)&quot;" rows="3"></textarea>
+      <div class="kindpicker" id="sheetKindPicker">
+        <button type="button" class="kindkind active" data-kind="command"></button>
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="cancelBtn">Peruuta</button>
+      <button class="btn-save" id="saveBtn">Tallenna</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Crypto helpers ---------- */
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+const ITERATIONS = 300000;
+
+function bufToB64(buf){
+  const bytes = new Uint8Array(buf); let bin = '';
+  for(let i=0;i<bytes.length;i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function b64ToBuf(b64){
+  const bin = atob(b64); const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+async function deriveKey(password, saltB64, iterations){
+  const salt = b64ToBuf(saltB64);
+  const baseKey = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name:'PBKDF2', salt, iterations, hash:'SHA-256' }, baseKey, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
+}
+async function encryptStr(key, plaintext){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ctBuf = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, enc.encode(plaintext));
+  return { iv: bufToB64(iv), ct: bufToB64(ctBuf) };
+}
+async function decryptStr(key, {iv, ct}){
+  const ptBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv: new Uint8Array(b64ToBuf(iv))}, key, b64ToBuf(ct));
+  return dec.decode(ptBuf);
+}
+
+/* ---------- Vault state ---------- */
+const VAULT_KEY = 'komennot_vault_v1';
+const LEGACY_V2 = 'komennot_v2';
+const LEGACY_V1 = 'komennot_v1';
+
+let vault = null;
+let cryptoKey = null;
+let groups = [];
+let revealedIds = new Set();
+let inactivityTimer = null;
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function normalizeKind(cmd){
+  // migration: old rows had `sensitive: true/false`, new rows have `kind`
+  if(cmd.kind) return cmd.kind;
+  return cmd.sensitive ? 'password' : 'command';
+}
+
+function getLegacyGroups(){
+  const v2 = localStorage.getItem(LEGACY_V2);
+  if(v2){
+    try{
+      const parsed = JSON.parse(v2);
+      return parsed.map(g => ({ ...g, commands: g.commands.map(c => ({ id:c.id, cmd:c.cmd, kind: normalizeKind(c) })) }));
+    }catch(e){}
+  }
+  const v1 = localStorage.getItem(LEGACY_V1);
+  if(v1){
+    try{
+      const old = JSON.parse(v1);
+      return old.map(it => ({ id: it.id || uid(), title: it.desc || 'Ilman kuvausta', created: it.created || Date.now(), commands: [{ id: uid(), cmd: it.cmd, kind:'command' }] }));
+    }catch(e){}
+  }
+  return null;
+}
+
+async function saveVault(){
+  const payload = await encryptStr(cryptoKey, JSON.stringify(groups));
+  vault.data = payload;
+  localStorage.setItem(VAULT_KEY, JSON.stringify(vault));
+}
+
+function clearInMemorySecrets(){ cryptoKey = null; groups = []; revealedIds = new Set(); }
+
+function lockNow(){
+  clearInMemorySecrets();
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('addFab').classList.add('hidden');
+  clearTimeout(inactivityTimer);
+  showLockedScreen();
+}
+
+function resetInactivityTimer(){
+  clearTimeout(inactivityTimer);
+  if(cryptoKey) inactivityTimer = setTimeout(lockNow, 5*60*1000);
+}
+['click','keydown','touchstart'].forEach(evt => document.addEventListener(evt, resetInactivityTimer));
+document.addEventListener('visibilitychange', () => { if(document.hidden && cryptoKey) lockNow(); });
+
+/* ---------- Lock/setup screens ---------- */
+const lockScreenEl = document.getElementById('lockScreen');
+const lockIconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3" stroke-linecap="round"/></svg>';
+
+function showSetupScreen(hasLegacyData){
+  lockScreenEl.classList.remove('hidden');
+  lockScreenEl.innerHTML = `
+    <div class="icon">${lockIconSvg}</div>
+    <h2>Aseta pääsalasana</h2>
+    <p>${hasLegacyData
+      ? 'Löysimme aiemmin tallennettuja komentoja. Ne salataan pääsalasanallasi AES-256:lla, ennen kuin niitä säilytetään laitteella.'
+      : 'Kaikki tallentamasi sisältö salataan laitteellasi tällä salasanalla. Käytä vahvaa, mieleenpainuvaa salasanaa.'}</p>
+    <input type="password" id="pw1" placeholder="Pääsalasana" autocomplete="new-password">
+    <input type="password" id="pw2" placeholder="Vahvista pääsalasana" autocomplete="new-password">
+    <button class="primary" id="setupBtn">Luo holvi</button>
+    <div class="err" id="setupErr"></div>
+    <div class="hint">Salaus tapahtuu vain tällä laitteella. Jos unohdat pääsalasanan, tietoja ei voi palauttaa — mitään takaovea ei ole.</div>
+  `;
+  const err = document.getElementById('setupErr');
+  document.getElementById('setupBtn').onclick = async () => {
+    const p1 = document.getElementById('pw1').value;
+    const p2 = document.getElementById('pw2').value;
+    if(p1.length < 6){ err.textContent = 'Käytä vähintään 6 merkkiä.'; return; }
+    if(p1 !== p2){ err.textContent = 'Salasanat eivät täsmää.'; return; }
+    err.textContent = 'Luodaan holvia...';
+    const saltB64 = bufToB64(crypto.getRandomValues(new Uint8Array(16)));
+    const key = await deriveKey(p1, saltB64, ITERATIONS);
+    const initialGroups = hasLegacyData ? getLegacyGroups() : [];
+    vault = { salt: saltB64, iterations: ITERATIONS, data: null };
+    cryptoKey = key;
+    groups = initialGroups || [];
+    await saveVault();
+    localStorage.removeItem(LEGACY_V2);
+    localStorage.removeItem(LEGACY_V1);
+    enterApp();
+  };
+}
+
+function showLockedScreen(){
+  lockScreenEl.classList.remove('hidden');
+  lockScreenEl.innerHTML = `
+    <div class="icon">${lockIconSvg}</div>
+    <h2>Lukittu</h2>
+    <p>Syötä pääsalasana avataksesi tallentamasi komennot.</p>
+    <input type="password" id="pwUnlock" placeholder="Pääsalasana" autocomplete="current-password">
+    <button class="primary" id="unlockBtn">Avaa</button>
+    <div class="err" id="unlockErr"></div>
+  `;
+  const err = document.getElementById('unlockErr');
+  const pwInput = document.getElementById('pwUnlock');
+  const doUnlock = async () => {
+    const pw = pwInput.value;
+    if(!pw) return;
+    err.textContent = 'Tarkistetaan...';
+    try{
+      const key = await deriveKey(pw, vault.salt, vault.iterations);
+      const plaintext = await decryptStr(key, vault.data);
+      const parsed = JSON.parse(plaintext);
+      groups = parsed.map(g => ({ ...g, commands: g.commands.map(c => ({ id:c.id, cmd:c.cmd, kind: normalizeKind(c) })) }));
+      cryptoKey = key;
+      err.textContent = '';
+      enterApp();
+    }catch(e){ err.textContent = 'Väärä salasana.'; }
+  };
+  document.getElementById('unlockBtn').onclick = doUnlock;
+  pwInput.addEventListener('keydown', e => { if(e.key === 'Enter') doUnlock(); });
+  setTimeout(() => pwInput.focus(), 150);
+}
+
+function enterApp(){
+  lockScreenEl.classList.add('hidden');
+  lockScreenEl.innerHTML = '';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('addFab').classList.remove('hidden');
+  resetInactivityTimer();
+  render();
+}
+
+async function initApp(){
+  const raw = localStorage.getItem(VAULT_KEY);
+  if(raw){ vault = JSON.parse(raw); showLockedScreen(); }
+  else{ const legacy = getLegacyGroups(); showSetupScreen(!!(legacy && legacy.length)); }
+}
+
+document.getElementById('lockBtn').onclick = lockNow;
+
+document.getElementById('changePwBtn').onclick = () => {
+  lockScreenEl.classList.remove('hidden');
+  lockScreenEl.innerHTML = `
+    <div class="icon">${lockIconSvg}</div>
+    <h2>Vaihda pääsalasana</h2>
+    <p>Vahvista nykyinen salasana ja aseta uusi.</p>
+    <input type="password" id="pwCurrent" placeholder="Nykyinen pääsalasana" autocomplete="current-password">
+    <input type="password" id="pwNew1" placeholder="Uusi pääsalasana" autocomplete="new-password">
+    <input type="password" id="pwNew2" placeholder="Vahvista uusi pääsalasana" autocomplete="new-password">
+    <button class="primary" id="changePwSubmit">Vaihda</button>
+    <button class="primary" id="changePwCancel" style="background:var(--surface-2);color:var(--text-dim);margin-top:8px;">Peruuta</button>
+    <div class="err" id="changePwErr"></div>
+  `;
+  const err = document.getElementById('changePwErr');
+  document.getElementById('changePwCancel').onclick = () => { lockScreenEl.classList.add('hidden'); lockScreenEl.innerHTML=''; };
+  document.getElementById('changePwSubmit').onclick = async () => {
+    const cur = document.getElementById('pwCurrent').value;
+    const n1 = document.getElementById('pwNew1').value;
+    const n2 = document.getElementById('pwNew2').value;
+    try{
+      const curKey = await deriveKey(cur, vault.salt, vault.iterations);
+      await decryptStr(curKey, vault.data);
+    }catch(e){ err.textContent = 'Nykyinen salasana on väärin.'; return; }
+    if(n1.length < 6){ err.textContent = 'Uusi salasana vähintään 6 merkkiä.'; return; }
+    if(n1 !== n2){ err.textContent = 'Uudet salasanat eivät täsmää.'; return; }
+    const newSaltB64 = bufToB64(crypto.getRandomValues(new Uint8Array(16)));
+    const newKey = await deriveKey(n1, newSaltB64, ITERATIONS);
+    vault = { salt: newSaltB64, iterations: ITERATIONS, data: null };
+    cryptoKey = newKey;
+    await saveVault();
+    lockScreenEl.classList.add('hidden');
+    lockScreenEl.innerHTML = '';
+  };
+};
+
+/* ---------- Kind metadata ---------- */
+const kindMeta = {
+  command:  { label:'Komento',       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l6 6-6 6M14 18h6" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+  username: { label:'Käyttäjätunnus',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+  password: { label:'Salasana',      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5L20 3M17 6l3 3M14 9l2 2" stroke-linecap="round" stroke-linejoin="round"/></svg>' }
+};
+function kindPickerHtml(activeKind, extraClass){
+  return Object.keys(kindMeta).map(k => `
+    <button type="button" class="${extraClass} ${k === activeKind ? 'active' : ''}" data-kind="${k}">
+      ${kindMeta[k].icon}<span>${kindMeta[k].label}</span>
+    </button>`).join('');
+}
+function wireKindPicker(containerEl){
+  containerEl.querySelectorAll('button[data-kind]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      containerEl.querySelectorAll('button[data-kind]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+}
+function getSelectedKind(containerEl){
+  const active = containerEl.querySelector('button[data-kind].active');
+  return active ? active.dataset.kind : 'command';
+}
+
+/* ---------- Main app rendering ---------- */
+const listEl = document.getElementById('list');
+const backdrop = document.getElementById('backdrop');
+const descInput = document.getElementById('descInput');
+const cmdInput = document.getElementById('cmdInput');
+const sheetTitle = document.getElementById('sheetTitle');
+const searchInput = document.getElementById('searchInput');
+const sheetKindPicker = document.getElementById('sheetKindPicker');
+sheetKindPicker.innerHTML = kindPickerHtml('command', 'kindpicker-btn-placeholder');
+sheetKindPicker.className = 'kindpicker';
+sheetKindPicker.querySelectorAll('button').forEach(b => b.classList.remove('kindpicker-btn-placeholder'));
+wireKindPicker(sheetKindPicker);
+
+let openAddRowFor = null;
+let openEditRow = null;
+let openTitleEdit = null;
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 01-1-1V4a1 1 0 011-1h10a1 1 0 011 1v1"/></svg>';
+const checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const trashIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0v13a1 1 0 01-1 1H8a1 1 0 01-1-1V7h10z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const pencilIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const plusIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>';
+const eyeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const eyeOffIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.6 20.6 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 7 11 7a20.4 20.4 0 01-3.22 4.19M14.12 14.12a3 3 0 11-4.24-4.24" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 1l22 22" stroke-linecap="round"/></svg>';
+
+function renderCmdRow(group, cmd){
+  const isEditing = openEditRow && openEditRow.groupId === group.id && openEditRow.cmdId === cmd.id;
+  if(isEditing){
+    return `
+      <div class="cmdbox editing" data-cmdid="${cmd.id}" style="flex-direction:column;align-items:stretch;">
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <textarea class="editarea" rows="2">${escapeHtml(cmd.cmd)}</textarea>
+          <div class="miniactions">
+            <button class="ok saveRow" data-gid="${group.id}" data-cid="${cmd.id}">${checkIcon}</button>
+            <button class="cancel cancelRow">✕</button>
+          </div>
+        </div>
+        <div class="kindpicker editRowKindPicker">${kindPickerHtml(cmd.kind, 'editkindbtn')}</div>
+      </div>`;
+  }
+  const revealed = revealedIds.has(cmd.id);
+  const showMasked = cmd.kind === 'password' && !revealed;
+  const displayText = showMasked ? '•••••••••••' : escapeHtml(cmd.cmd);
+  return `
+    <div class="cmdbox k-${cmd.kind}" data-cmdid="${cmd.id}">
+      <span class="kindbadge k-${cmd.kind}" title="${kindMeta[cmd.kind].label}">${kindMeta[cmd.kind].icon}</span>
+      <div class="cmdtext editTrigger k-${cmd.kind} ${showMasked ? 'masked' : ''}" data-gid="${group.id}" data-cid="${cmd.id}">${displayText}</div>
+      ${cmd.kind === 'password' ? `<button class="eyebtn toggleReveal" data-cid="${cmd.id}" title="${revealed ? 'Piilota' : 'Näytä'}">${revealed ? eyeOffIcon : eyeIcon}</button>` : ''}
+      <button class="copybtn" data-cmd="${encodeURIComponent(cmd.cmd)}" data-kind="${cmd.kind}" title="Kopioi">${copyIcon}</button>
+      <button class="rowbtn delRow" data-gid="${group.id}" data-cid="${cmd.id}" title="Poista rivi">${trashIcon}</button>
+    </div>`;
+}
+
+function render(){
+  const q = searchInput.value.trim().toLowerCase();
+  const filtered = groups
+    .map(g => {
+      if(!q) return g;
+      const titleHit = g.title.toLowerCase().includes(q);
+      const cmds = titleHit ? g.commands : g.commands.filter(c => c.cmd.toLowerCase().includes(q));
+      return cmds.length ? { ...g, commands: cmds } : null;
+    })
+    .filter(Boolean);
+
+  if(filtered.length === 0){
+    listEl.innerHTML = `<div class="empty">${
+      groups.length === 0 ? 'Ei vielä komentoja.<br><b>Napauta +</b> lisätäksesi ensimmäinen ryhmä.' : 'Ei hakutuloksia.'
+    }</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(g => `
+    <div class="card" data-id="${g.id}">
+      <div class="card-head">
+        <p class="desc">${escapeHtml(g.title)}</p>
+        <div class="titleedit ${openTitleEdit === g.id ? 'active' : ''}">
+          <input type="text" class="titleInput" data-gid="${g.id}" value="${escapeHtml(g.title)}">
+        </div>
+        <button class="titlebtn renameGroup" data-gid="${g.id}" title="Nimeä uudelleen">${pencilIcon}</button>
+        <button class="titlebtn delGroup" data-gid="${g.id}" title="Poista ryhmä">${trashIcon}</button>
+      </div>
+      <div class="cmdrows">${g.commands.map(c => renderCmdRow(g, c)).join('')}</div>
+      ${openAddRowFor === g.id ? `
+        <div class="newrowbox">
+          <textarea class="newRowInput" rows="2" placeholder="Uusi rivi..."></textarea>
+          <div class="kindpicker newRowKindPicker">${kindPickerHtml('command', 'newkindbtn')}</div>
+          <div class="sheet-actions">
+            <button class="btn-cancel cancelAddRow">Peruuta</button>
+            <button class="btn-save confirmAddRow" data-gid="${g.id}">Lisää</button>
+          </div>
+        </div>
+      ` : `<button class="addrow showAddRow" data-gid="${g.id}">${plusIcon} Lisää rivi</button>`}
+    </div>
+  `).join('');
+
+  if(openTitleEdit){
+    const inp = listEl.querySelector(`.titleInput[data-gid="${openTitleEdit}"]`);
+    const head = inp && inp.closest('.card-head');
+    if(head) head.classList.add('editing');
+    if(inp){ inp.focus(); inp.select(); }
+  }
+  if(openAddRowFor){
+    const ta = listEl.querySelector('.newRowInput');
+    if(ta) ta.focus();
+    const picker = listEl.querySelector('.newRowKindPicker');
+    if(picker) wireKindPicker(picker);
+  }
+  if(openEditRow){
+    const ta = listEl.querySelector('.editarea');
+    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    const picker = listEl.querySelector('.editRowKindPicker');
+    if(picker) wireKindPicker(picker);
+  }
+}
+
+function openSheet(){
+  sheetTitle.textContent = 'Uusi ryhmä';
+  descInput.value = '';
+  cmdInput.value = '';
+  sheetKindPicker.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.kind === 'command'));
+  backdrop.classList.add('open');
+  setTimeout(() => descInput.focus(), 200);
+}
+function closeSheet(){ backdrop.classList.remove('open'); }
+
+document.getElementById('addFab').onclick = openSheet;
+document.getElementById('cancelBtn').onclick = closeSheet;
+backdrop.addEventListener('click', e => { if(e.target === backdrop) closeSheet(); });
+
+document.getElementById('saveBtn').onclick = async () => {
+  const title = descInput.value.trim();
+  const cmd = cmdInput.value.trim();
+  if(!cmd){ cmdInput.focus(); return; }
+  const kind = getSelectedKind(sheetKindPicker);
+  groups.unshift({ id: uid(), title: title || 'Ilman kuvausta', created: Date.now(), commands: [{ id: uid(), cmd, kind }] });
+  await saveVault(); render(); closeSheet();
+};
+
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); }
+  catch(err){
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); ta.remove();
+  }
+}
+
+listEl.addEventListener('click', async (e) => {
+  const copyBtn = e.target.closest('.copybtn');
+  const renameBtn = e.target.closest('.renameGroup');
+  const delGroupBtn = e.target.closest('.delGroup');
+  const delRowBtn = e.target.closest('.delRow');
+  const editTrigger = e.target.closest('.editTrigger');
+  const toggleRevealBtn = e.target.closest('.toggleReveal');
+  const showAddRowBtn = e.target.closest('.showAddRow');
+  const cancelAddRowBtn = e.target.closest('.cancelAddRow');
+  const confirmAddRowBtn = e.target.closest('.confirmAddRow');
+  const saveRowBtn = e.target.closest('.saveRow');
+  const cancelRowBtn = e.target.closest('.cancelRow');
+
+  if(toggleRevealBtn){
+    const cid = toggleRevealBtn.dataset.cid;
+    if(revealedIds.has(cid)) revealedIds.delete(cid);
+    else{ revealedIds.add(cid); setTimeout(() => { revealedIds.delete(cid); render(); }, 8000); }
+    render();
+    return;
+  }
+  if(copyBtn){
+    const text = decodeURIComponent(copyBtn.dataset.cmd);
+    const kind = copyBtn.dataset.kind;
+    await copyText(text);
+    copyBtn.classList.add('copied');
+    copyBtn.innerHTML = checkIcon;
+    setTimeout(() => { copyBtn.classList.remove('copied'); copyBtn.innerHTML = copyIcon; }, 1400);
+    if(kind === 'password'){ setTimeout(async () => { await copyText(''); }, 20000); }
+    return;
+  }
+  if(renameBtn){ openTitleEdit = renameBtn.dataset.gid; render(); return; }
+  if(delGroupBtn){
+    if(confirm('Poistetaanko koko ryhmä komentoineen?')){
+      groups = groups.filter(g => g.id !== delGroupBtn.dataset.gid);
+      await saveVault(); render();
+    }
+    return;
+  }
+  if(delRowBtn){
+    const g = groups.find(x => x.id === delRowBtn.dataset.gid);
+    if(g && g.commands.length === 1){
+      if(confirm('Tämä on ryhmän ainoa rivi. Poistetaanko koko ryhmä?')){
+        groups = groups.filter(x => x.id !== g.id);
+        await saveVault(); render();
+      }
+      return;
+    }
+    if(confirm('Poistetaanko tämä rivi?')){
+      g.commands = g.commands.filter(c => c.id !== delRowBtn.dataset.cid);
+      await saveVault(); render();
+    }
+    return;
+  }
+  if(editTrigger){ openEditRow = { groupId: editTrigger.dataset.gid, cmdId: editTrigger.dataset.cid }; render(); return; }
+  if(showAddRowBtn){ openAddRowFor = showAddRowBtn.dataset.gid; render(); return; }
+  if(cancelAddRowBtn){ openAddRowFor = null; render(); return; }
+  if(confirmAddRowBtn){
+    const box = confirmAddRowBtn.closest('.newrowbox');
+    const text = box.querySelector('.newRowInput').value.trim();
+    const kind = getSelectedKind(box.querySelector('.newRowKindPicker'));
+    if(!text) return;
+    const g = groups.find(x => x.id === confirmAddRowBtn.dataset.gid);
+    g.commands.push({ id: uid(), cmd: text, kind });
+    openAddRowFor = null;
+    await saveVault(); render();
+    return;
+  }
+  if(saveRowBtn){
+    const box = saveRowBtn.closest('.cmdbox');
+    const text = box.querySelector('.editarea').value.trim();
+    if(!text) return;
+    const kind = getSelectedKind(box.querySelector('.editRowKindPicker'));
+    const g = groups.find(x => x.id === saveRowBtn.dataset.gid);
+    const c = g.commands.find(x => x.id === saveRowBtn.dataset.cid);
+    c.cmd = text;
+    c.kind = kind;
+    openEditRow = null;
+    await saveVault(); render();
+    return;
+  }
+  if(cancelRowBtn){ openEditRow = null; render(); return; }
+});
+
+listEl.addEventListener('keydown', e => {
+  if(e.target.classList.contains('titleInput') && e.key === 'Enter'){ e.preventDefault(); e.target.blur(); }
+});
+listEl.addEventListener('focusout', async (e) => {
+  if(e.target.classList.contains('titleInput')){
+    const gid = e.target.dataset.gid;
+    const g = groups.find(x => x.id === gid);
+    const val = e.target.value.trim();
+    if(g) g.title = val || 'Ilman kuvausta';
+    openTitleEdit = null;
+    await saveVault(); render();
+  }
+}, true);
+
+searchInput.addEventListener('input', render);
+
+document.getElementById('exportBtn').onclick = () => {
+  const blob = new Blob([JSON.stringify(vault, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'komennot-holvi-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+};
+
+const fileImport = document.getElementById('fileImport');
+document.getElementById('importBtn').onclick = () => fileImport.click();
+fileImport.onchange = (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const imported = JSON.parse(reader.result);
+      if(!imported.salt || !imported.data) throw new Error('bad format');
+      if(!confirm('Tämä korvaa nykyisen holvin tuodulla varmuuskopiolla ja lukitsee sovelluksen. Jatketaanko?')) return;
+      localStorage.setItem(VAULT_KEY, JSON.stringify(imported));
+      vault = imported;
+      lockNow();
+    }catch(err){
+      alert('Tiedoston lukeminen epäonnistui. Varmista että kyseessä on tämän sovelluksen vientitiedosto.');
+    }
+  };
+  reader.readAsText(file);
+  fileImport.value = '';
+};
+
+initApp();
+</script>
+</body>
+</html>
